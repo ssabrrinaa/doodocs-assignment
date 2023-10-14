@@ -5,9 +5,9 @@ import (
 	"archive/zip"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"test/models"
 )
@@ -52,23 +52,27 @@ func (ar *ArchiveRepository) ExtractAndSave(file io.Reader, header *multipart.Fi
 	defer reader.Close()
 
 	// Iterate over the files
-	for _, file := range reader.File {
-		filePath := filepath.Join("extracted_files", file.Name)
-		size := file.UncompressedSize64
+	for _, file_ex := range reader.File {
+		filePath := filepath.Join("extracted_files", file_ex.Name)
+		size := file_ex.UncompressedSize64
 		totalSize += int64(size)
 
+		mimetype, err := GetMimeType(file)
+		if err != nil {
+			return archiveInfo, err
+		}
 		// Create an info for the file
 		fileInfo := models.FileInfo{
 			FilePath: filePath,
 			Size:     int64(size),
-			MimeType: GetMimeType(file.Name),
+			MimeType: mimetype,
 		}
 		filesInfo = append(filesInfo, fileInfo)
 	}
 
 	// Fil the info about archive
 	archiveInfo.Filename = filepath.Base(filePath)
-	archiveInfo.ArchiveSize = float64(totalSize)
+	archiveInfo.ArchiveSize, err = getCompressedSize(filePath)
 	archiveInfo.TotalSize = float64(totalSize)
 	archiveInfo.TotalFiles = float64(len(filesInfo))
 	archiveInfo.Files = filesInfo
@@ -76,12 +80,32 @@ func (ar *ArchiveRepository) ExtractAndSave(file io.Reader, header *multipart.Fi
 	return archiveInfo, nil
 }
 
-func GetMimeType(fileName string) string {
-	// Пример простой логики для определения MIME-типа
-	if strings.HasSuffix(fileName, ".jpg") {
-		return "image/jpeg"
-	} else if strings.HasSuffix(fileName, ".docx") {
-		return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+func getCompressedSize(filePath string) (float64, error) {
+	// Open the archived file
+	archiveFile, err := os.Open(filePath)
+	if err != nil {
+		return 0, err
 	}
-	return "application/octet-stream"
+	defer archiveFile.Close()
+
+	// Get file information
+	fileInfo, err := archiveFile.Stat()
+	if err != nil {
+		return 0, err
+	}
+
+	// Retrieve the compressed size from file information
+	return float64(fileInfo.Size()), nil
+}
+
+func GetMimeType(file io.Reader) (string, error) {
+	buffer := make([]byte, 512)
+	n, err := file.Read(buffer)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+
+	contentType := http.DetectContentType(buffer[:n])
+
+	return contentType, nil
 }
