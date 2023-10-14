@@ -22,6 +22,7 @@ func main() {
 	// archiveHandler := handlers.NewArchiveHandler()
 
 	// Регистрируем хендлер
+	http.HandleFunc("/", h.Home)
 	http.HandleFunc("/api/archive/information", h.HandleArchiveInformation)
 
 	// http.ListenAndServe(":8080", nil)

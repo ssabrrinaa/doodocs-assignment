@@ -4,6 +4,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strings"
 
@@ -41,6 +42,13 @@ func (ah *ArchiveHandler) HandleArchiveInformation(w http.ResponseWriter, r *htt
 		return
 	}
 
+	_, err = template.ParseFiles("templates/1route.html")
+	if err != nil {
+		fmt.Println("here")
+		errorHandler(w, r, http.StatusInternalServerError)
+		return
+	}
+
 	// Use a service to get/extract/read info about achive
 	archiveInfo, err := ah.archiveService.GetArchiveInfo(file, header)
 	if err != nil {
@@ -51,4 +59,10 @@ func (ah *ArchiveHandler) HandleArchiveInformation(w http.ResponseWriter, r *htt
 	// Return the result in JSON format
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(archiveInfo)
+
+	// err = t.Execute(w, archiveInfo)
+	// if err != nil {
+	// 	errorHandler(w, r, http.StatusInternalServerError)
+	// 	return
+	// }
 }
