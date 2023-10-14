@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Archive</title>
+</head>
+<body>
+    <h2>Upload Archive</h2>
+    <form action="http://localhost:8080/api/archive/information" method="post" enctype="multipart/form-data">
+        <label for="file">Select Archive:</label>
+        <input type="file" name="file" id="file" accept=".zip" required>
+        <br>
+        <button type="submit">Upload</button>
+    </form>
+</body>
+</html>
