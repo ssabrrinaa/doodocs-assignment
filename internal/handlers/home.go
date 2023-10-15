@@ -24,7 +24,6 @@ func (h *ArchiveHandler) Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// data, err := h.service.GetAllArtists()
 	err = t.Execute(w, nil)
 	if err != nil {
 		errorHandler(w, r, http.StatusInternalServerError)
