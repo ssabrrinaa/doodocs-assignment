@@ -1,4 +1,3 @@
-// main.go
 package main
 
 import (
@@ -21,11 +20,9 @@ func main() {
 	h := handlers.NewArchiveHandler(s)
 	// archiveHandler := handlers.NewArchiveHandler()
 
-	// Регистрируем хендлер
 	http.HandleFunc("/", h.Home)
-	http.HandleFunc("/api/archive/information", h.HandleArchiveInformation)
-
-	// http.ListenAndServe(":8080", nil)
+	http.HandleFunc("/api/archive/information", h.ArchiveInformationHandler)
+	http.HandleFunc("/api/archive/files", h.CreateArchiveHandler)
 
 	fmt.Println("Server starting on http://localhost:4000")
 	if err := http.ListenAndServe(Addr, nil); err != nil {

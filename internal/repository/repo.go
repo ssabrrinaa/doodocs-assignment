@@ -1,10 +1,10 @@
-// repository/archive_repository.go
 package repository
 
 import (
 	"archive/zip"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -56,9 +56,9 @@ func (r *ArchiveRepository) ExtractAndSave(file io.Reader, header *multipart.Fil
 
 	// Iterate over the files
 	for _, file_extracted := range reader.File {
-		// Check if the entry is a directory
+		// Check if the entry is a directory and Skip directories
 		if file_extracted.FileInfo().IsDir() {
-			continue // Skip directories
+			continue
 		}
 		filePath_extracted := path.Join("extracted_files", file_extracted.Name)
 		size := file_extracted.UncompressedSize64
@@ -69,7 +69,7 @@ func (r *ArchiveRepository) ExtractAndSave(file io.Reader, header *multipart.Fil
 			return archiveInfo, err
 		}
 
-		// Create an info for the file
+		// Fill the info about each file
 		fileInfo := models.FileInfo{
 			FilePath: filePath_extracted,
 			Size:     int64(size),
@@ -114,4 +114,68 @@ func GetMimeType(zipFile *zip.File) (string, error) {
 	mimeType := http.DetectContentType(buffer)
 
 	return mimeType, nil
+}
+
+func (r *ArchiveRepository) CreateArchiveFile(files []*multipart.FileHeader, zipWriter *zip.Writer) error {
+	for _, fileHeader := range files {
+		// fmt.Println(fileHeader.Filename, "filename")
+		is, err := isValidMIMEType(fileHeader)
+		if err != nil {
+			// http.Error(w, fmt.Sprintf("Failed to create archive files: %s", err), http.StatusInternalServerError) //check the error
+			return err
+		}
+		if is {
+			file, err := fileHeader.Open()
+			if err != nil {
+				log.Println("Error opening file:", err)
+				return err
+			}
+			defer file.Close()
+
+			zipFile, err := zipWriter.Create(fileHeader.Filename)
+			if err != nil {
+				log.Println("Error creating ZIP file:", err)
+				return err
+			}
+
+			_, err = io.Copy(zipFile, file)
+			if err != nil {
+				log.Println("Error copying file to ZIP archive:", err)
+				return err
+			}
+		} else {
+			// log.Println()
+			// http.Error(w, "Invalid MIME type:", http.StatusBadRequest)
+			return fmt.Errorf("Invalid MIME type:%v", fileHeader.Filename)
+		}
+	}
+	return nil
+}
+
+func isValidMIMEType(fileHeader *multipart.FileHeader) (bool, error) {
+	// Здесь определите разрешенные MIME-типы файлов, которые вы хотите архивировать
+	allowedMIMETypes := map[string]bool{
+		"image/jpeg":      true,
+		"image/png":       true,
+		"application/xml": true,
+		"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		fmt.Println("here", err)
+		return false, err
+	}
+	defer file.Close()
+
+	// Читаем первые 512 байт файла, чтобы определить MIME-тип
+	buffer := make([]byte, 512)
+	_, err = file.Read(buffer)
+	if err != nil {
+		return false, err
+	}
+
+	mimeType := http.DetectContentType(buffer)
+	fmt.Println(mimeType)
+	return allowedMIMETypes[mimeType], err
 }

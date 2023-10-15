@@ -19,31 +19,32 @@ func NewArchiveHandler(s *service.ArchiveService) *ArchiveHandler {
 	}
 }
 
-func (h *ArchiveHandler) HandleArchiveInformation(w http.ResponseWriter, r *http.Request) {
+func (h *ArchiveHandler) ArchiveInformationHandler(w http.ResponseWriter, r *http.Request) {
 	// Check the POST request
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		errorHandler(w, r, http.StatusMethodNotAllowed, "")
 		return
 	}
 
 	// Recieve a file form a request
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, "No file provided", http.StatusBadRequest)
+		errorHandler(w, r, http.StatusBadRequest, "No file provided")
 		return
 	}
 	defer file.Close()
 
 	// Check if the file is zipped
 	if !strings.HasSuffix(header.Filename, ".zip") {
-		http.Error(w, "Invalid file format. Please provide a ZIP archive", http.StatusBadRequest)
+		errorHandler(w, r, http.StatusBadRequest, "Invalid file format. Please provide a ZIP archive")
 		return
 	}
 
 	// Use a service to get/extract/read info about archive
 	archiveInfo, err := h.archiveService.GetArchiveInfo(file, header)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get archive information: %s", err), http.StatusInternalServerError)
+		errorHandler(w, r, http.StatusBadRequest, fmt.Sprintf("Failed to get archive information: %s", err)) //check the type of error
+
 		return
 	}
 
