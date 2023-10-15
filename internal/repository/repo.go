@@ -3,10 +3,12 @@ package repository
 
 import (
 	"archive/zip"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 
 	"test/models"
@@ -18,7 +20,7 @@ func NewArchiveRepository() *ArchiveRepository {
 	return &ArchiveRepository{}
 }
 
-func (ar *ArchiveRepository) ExtractAndSave(file io.Reader, header *multipart.FileHeader) (*models.ArchiveInfo, error) {
+func (r *ArchiveRepository) ExtractAndSave(file io.Reader, header *multipart.FileHeader) (*models.ArchiveInfo, error) {
 	tempDir := "extracted_files"
 	archiveInfo := &models.ArchiveInfo{}
 	filesInfo := []models.FileInfo{}
@@ -32,7 +34,8 @@ func (ar *ArchiveRepository) ExtractAndSave(file io.Reader, header *multipart.Fi
 	defer os.RemoveAll(tempDir)
 
 	// Save a file to the disk
-	filePath := filepath.Join(tempDir, header.Filename)
+	filePath := path.Join(tempDir, header.Filename)
+	fmt.Println(filePath, "filepath")
 	outFile, err := os.Create(filePath)
 	if err != nil {
 		return archiveInfo, err
@@ -52,18 +55,23 @@ func (ar *ArchiveRepository) ExtractAndSave(file io.Reader, header *multipart.Fi
 	defer reader.Close()
 
 	// Iterate over the files
-	for _, file_ex := range reader.File {
-		filePath := filepath.Join("extracted_files", file_ex.Name)
-		size := file_ex.UncompressedSize64
+	for _, file_extracted := range reader.File {
+		// Check if the entry is a directory
+		if file_extracted.FileInfo().IsDir() {
+			continue // Skip directories
+		}
+		filePath_extracted := path.Join("extracted_files", file_extracted.Name)
+		size := file_extracted.UncompressedSize64
 		totalSize += int64(size)
 
-		mimetype, err := GetMimeType(file)
+		mimetype, err := GetMimeType(file_extracted)
 		if err != nil {
 			return archiveInfo, err
 		}
+
 		// Create an info for the file
 		fileInfo := models.FileInfo{
-			FilePath: filePath,
+			FilePath: filePath_extracted,
 			Size:     int64(size),
 			MimeType: mimetype,
 		}
@@ -72,7 +80,7 @@ func (ar *ArchiveRepository) ExtractAndSave(file io.Reader, header *multipart.Fi
 
 	// Fil the info about archive
 	archiveInfo.Filename = filepath.Base(filePath)
-	archiveInfo.ArchiveSize, err = getCompressedSize(filePath)
+	archiveInfo.ArchiveSize = float64(header.Size)
 	archiveInfo.TotalSize = float64(totalSize)
 	archiveInfo.TotalFiles = float64(len(filesInfo))
 	archiveInfo.Files = filesInfo
@@ -80,32 +88,30 @@ func (ar *ArchiveRepository) ExtractAndSave(file io.Reader, header *multipart.Fi
 	return archiveInfo, nil
 }
 
-func getCompressedSize(filePath string) (float64, error) {
-	// Open the archived file
-	archiveFile, err := os.Open(filePath)
+// func GetMimeType(filePath string) (string, error) {
+// 	ext := strings.ToLower(filepath.Ext(filePath))
+// 	mimeType := mime.TypeByExtension(ext)
+// 	if mimeType == "" {
+// 		mimeType = "application/octet-stream"
+// 	}
+// 	return mimeType, nil
+// }
+
+func GetMimeType(zipFile *zip.File) (string, error) {
+	file, err := zipFile.Open()
 	if err != nil {
-		return 0, err
+		return "", err
 	}
-	defer archiveFile.Close()
+	defer file.Close()
 
-	// Get file information
-	fileInfo, err := archiveFile.Stat()
-	if err != nil {
-		return 0, err
-	}
-
-	// Retrieve the compressed size from file information
-	return float64(fileInfo.Size()), nil
-}
-
-func GetMimeType(file io.Reader) (string, error) {
-	buffer := make([]byte, 512)
-	n, err := file.Read(buffer)
+	buffer := make([]byte, 512) // Read the first 512 bytes to determine the MIME type
+	_, err = file.Read(buffer)
 	if err != nil && err != io.EOF {
 		return "", err
 	}
 
-	contentType := http.DetectContentType(buffer[:n])
+	// Determine the MIME type
+	mimeType := http.DetectContentType(buffer)
 
-	return contentType, nil
+	return mimeType, nil
 }

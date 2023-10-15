@@ -1,4 +1,3 @@
-// handlers/archive_handler.go
 package handlers
 
 import (
@@ -20,7 +19,7 @@ func NewArchiveHandler(s *service.ArchiveService) *ArchiveHandler {
 	}
 }
 
-func (ah *ArchiveHandler) HandleArchiveInformation(w http.ResponseWriter, r *http.Request) {
+func (h *ArchiveHandler) HandleArchiveInformation(w http.ResponseWriter, r *http.Request) {
 	// Check the POST request
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -41,8 +40,8 @@ func (ah *ArchiveHandler) HandleArchiveInformation(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// Use a service to get/extract/read info about achive
-	archiveInfo, err := ah.archiveService.GetArchiveInfo(file, header)
+	// Use a service to get/extract/read info about archive
+	archiveInfo, err := h.archiveService.GetArchiveInfo(file, header)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get archive information: %s", err), http.StatusInternalServerError)
 		return

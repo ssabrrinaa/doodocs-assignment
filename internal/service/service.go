@@ -19,6 +19,6 @@ func NewArchiveService(r *repository.ArchiveRepository) *ArchiveService {
 	}
 }
 
-func (as *ArchiveService) GetArchiveInfo(file io.Reader, header *multipart.FileHeader) (*models.ArchiveInfo, error) {
-	return as.archiveRepository.ExtractAndSave(file, header)
+func (s *ArchiveService) GetArchiveInfo(file io.Reader, header *multipart.FileHeader) (*models.ArchiveInfo, error) {
+	return s.archiveRepository.ExtractAndSave(file, header)
 }
