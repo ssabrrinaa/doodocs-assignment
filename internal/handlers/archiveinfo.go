@@ -5,21 +5,19 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"test/internal/service"
 )
 
-type ArchiveHandler struct {
-	archiveService *service.ArchiveService
-}
+// type ArchiveHandler struct {
+// 	archiveService *service.ArchiveService
+// }
 
-func NewArchiveHandler(s *service.ArchiveService) *ArchiveHandler {
-	return &ArchiveHandler{
-		archiveService: s,
-	}
-}
+// func NewArchiveHandler(s *service.ArchiveService) *ArchiveHandler {
+// 	return &ArchiveHandler{
+// 		archiveService: s,
+// 	}
+// }
 
-func (h *ArchiveHandler) ArchiveInformationHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ArchiveHandler) ArchiveInfoHandler(w http.ResponseWriter, r *http.Request) {
 	// Check the POST request
 	if r.Method != http.MethodPost {
 		errorHandler(w, r, http.StatusMethodNotAllowed, "")
@@ -43,7 +41,7 @@ func (h *ArchiveHandler) ArchiveInformationHandler(w http.ResponseWriter, r *htt
 	// Use a service to get/extract/read info about archive
 	archiveInfo, err := h.archiveService.GetArchiveInfo(file, header)
 	if err != nil {
-		errorHandler(w, r, http.StatusBadRequest, fmt.Sprintf("Failed to get archive information: %s", err)) //check the type of error
+		errorHandler(w, r, http.StatusBadRequest, fmt.Sprintf("Failed to get archive information: %s", err)) // check the type of error
 
 		return
 	}

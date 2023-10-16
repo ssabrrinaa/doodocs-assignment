@@ -30,13 +30,20 @@ func (h *ArchiveHandler) CreateArchiveHandler(w http.ResponseWriter, r *http.Req
 	zipWriter := zip.NewWriter(w)
 	defer zipWriter.Close()
 
+	// tmpl, err := template.ParseFiles("templates/index.html")
+	// if err != nil {
+	// 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError) // check
+	// 	return
+	// }
+
 	err = h.archiveService.CreateArchive(files, zipWriter)
 	if err != nil {
 		// fmt.Println("no mime")
 		errorHandler(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
-
+	// w.Write([]byte("File archived successfully"))
+	// tmpl.Execute(w, "File archived successfully")
 	w.Header().Set("Content-Type", "application/zip")
 	w.Header().Set("Content-Disposition", "attachment; filename=output.zip")
 }

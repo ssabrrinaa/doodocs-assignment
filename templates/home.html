@@ -13,14 +13,32 @@
         <br>
         <button type="submit">Upload</button>
     </form>
+    <br>
 
 
-    <h2>File Upload Form</h2>
+    <h2>File Upload Form to Create Archive</h2>
     <form action="http://localhost:4000/api/archive/files" method="post" enctype="multipart/form-data">
         <label for="file">Select files to upload:</label>
         <input type="file" name="files[]" id="file" multiple>
         <br>
         <button type="submit">Upload</button>    
+    </form>
+    <br>
+
+    
+    <h2>Upload File and Send to Emails </h2>
+    <form id="fileEmailForm" enctype="multipart/form-data" method="post" action="/api/mail/file">
+        <label for="file">Select File:</label>
+        <input type="file" name="file" accept=".docx, .pdf" required>
+        
+        <br>
+
+        <label for="emails">Emails (comma-separated):</label>
+        <input type="text" name="emails" required>
+        
+        <br>
+
+        <button type="submit">Send Email</button>
     </form>
 </body>
 </html>
