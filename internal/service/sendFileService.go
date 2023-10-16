@@ -22,42 +22,35 @@ func (r *ArchiveService) SendFile(file multipart.File, fileHeader *multipart.Fil
 
 	// Check if the file MIME type is valid
 	if !isValidFileType(fileHeader) {
-		// errorHandler(w, r, http.StatusBadRequest, "Invalid file type")
-		return fmt.Errorf("Invalid MIME type:%v", fileHeader.Filename)
+		return fmt.Errorf("invalid  mimetype:%v", fileHeader.Filename)
 	}
 
-	// Создаем временную директорию
+	// Create a temp directory
 	tempDir := os.TempDir()
 
-	// Определяем путь для сохранения файла во временной директории
 	filePath := filepath.Join(tempDir, fileHeader.Filename)
 
-	// Создаем новый файл для сохранения во временной директории
+	// Create a new file in a tempDir
 	destination, err := os.Create(filePath)
 	if err != nil {
-		// http.Error(w, err.Error(), http.StatusInternalServerError)
 		return err
 	}
 	defer destination.Close()
 
-	// Копируем содержимое файла из запроса в созданный файл
+	// Copy the file content into the created file
 	_, err = io.Copy(destination, file)
 	if err != nil {
-		// http.Error(w, err.Error(), http.StatusInternalServerError)
 		return err
 	}
 
 	// Send email with the file attachment
 	err = sendFileToEmails(filePath, emails)
 	if err != nil {
-		// fmt.Println(err)
-		// http.Error(w, "Error sending email", http.StatusInternalServerError)
 		return err
 	}
 	return nil
 }
 
-// Send the file to the specified emails using SMTP
 func sendFileToEmails(filePath string, emails []string) error {
 	// Set up authentication information.
 	auth := smtp.PlainAuth("", smtpUsername, smtpPassword, smtpServer)

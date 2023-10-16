@@ -7,16 +7,6 @@ import (
 	"strings"
 )
 
-// type ArchiveHandler struct {
-// 	archiveService *service.ArchiveService
-// }
-
-// func NewArchiveHandler(s *service.ArchiveService) *ArchiveHandler {
-// 	return &ArchiveHandler{
-// 		archiveService: s,
-// 	}
-// }
-
 func (h *ArchiveHandler) ArchiveInfoHandler(w http.ResponseWriter, r *http.Request) {
 	// Check the POST request
 	if r.Method != http.MethodPost {
@@ -41,8 +31,7 @@ func (h *ArchiveHandler) ArchiveInfoHandler(w http.ResponseWriter, r *http.Reque
 	// Use a service to get/extract/read info about archive
 	archiveInfo, err := h.archiveService.GetArchiveInfo(file, header)
 	if err != nil {
-		errorHandler(w, r, http.StatusBadRequest, fmt.Sprintf("Failed to get archive information: %s", err)) // check the type of error
-
+		errorHandler(w, r, http.StatusBadRequest, fmt.Sprintf("Failed to get archive information: %s", err))
 		return
 	}
 

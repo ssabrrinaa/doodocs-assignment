@@ -6,7 +6,6 @@ import (
 	"io"
 	"mime"
 	"mime/multipart"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -58,11 +57,6 @@ func (r *ArchiveService) GetArchiveInfo(file io.Reader, header *multipart.FileHe
 		size := file_extracted.UncompressedSize64
 		totalSize += int64(size)
 
-		// mimetype, err := GetMimeType(file_extracted)
-		// if err != nil {
-		// 	return archiveInfo, err
-		// }
-
 		// Fill the info about each file
 		fileInfo := models.FileInfo{
 			FilePath: filePath_extracted,
@@ -82,21 +76,21 @@ func (r *ArchiveService) GetArchiveInfo(file io.Reader, header *multipart.FileHe
 	return archiveInfo, nil
 }
 
-func GetMimeType(zipFile *zip.File) (string, error) {
-	file, err := zipFile.Open()
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
+// func GetMimeType(zipFile *zip.File) (string, error) {
+// 	file, err := zipFile.Open()
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	defer file.Close()
 
-	buffer := make([]byte, 512) // Read the first 512 bytes to determine the MIME type
-	_, err = file.Read(buffer)
-	if err != nil && err != io.EOF {
-		return "", err
-	}
+// 	buffer := make([]byte, 512) // Read the first 512 bytes to determine the MIME type
+// 	_, err = file.Read(buffer)
+// 	if err != nil && err != io.EOF {
+// 		return "", err
+// 	}
 
-	// Determine the MIME type
-	mimeType := http.DetectContentType(buffer)
+// 	// Determine the MIME type
+// 	mimeType := http.DetectContentType(buffer)
 
-	return mimeType, nil
-}
+// 	return mimeType, nil
+// }
