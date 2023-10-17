@@ -11,13 +11,6 @@ import (
 	"github.com/scorredoira/email"
 )
 
-const (
-	smtpServer   = "smtp.gmail.com"
-	smtpPort     = "587"
-	smtpUsername = "bakirova200024@gmail.com"
-	smtpPassword = "zevghlaxkgwpkdic"
-)
-
 func (r *ArchiveService) SendFile(file multipart.File, fileHeader *multipart.FileHeader, emails []string) error {
 
 	// Check if the file MIME type is valid
@@ -79,3 +72,10 @@ func isValidFileType(fileHeader *multipart.FileHeader) bool {
 	}
 	return allowedTypes[fileHeader.Header.Get("Content-Type")]
 }
+
+const (
+	smtpServer   = "smtp.gmail.com"
+	smtpPort     = "587"
+	smtpUsername = "your_mail@gmail.com" // enter the sender
+	smtpPassword = "your_code"           // enter sender password
+)
